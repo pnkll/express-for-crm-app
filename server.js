@@ -30,14 +30,17 @@ client.connect(function (err, client) {
 
 //Requests
 
-app.get('/users', function (req, res) {
-    res.send(data)
+app.get('/users', async function  (req, res) {
+    const data = db.collection('users')
+    const response = await data.find({}).toArray()
+    res.send(response)
 })
 
 app.post('/users', function (req, res){
     var user = {
-        name: req.body.name,
-        group: req.body.group
+        login: req.body.name,
+        group: req.body.group,
+        password: req.body.password
     }
     
     db.collection('users').insertOne(user, function(err, result){
@@ -48,5 +51,17 @@ app.post('/users', function (req, res){
         res.send(user)
     })
     
+})
+
+app.post('/login', async function (req, res){
+    var user = {
+        login: req.body.login,
+        password: req.body.password
+    }
+
+    const resp = await db.collection('users').findOne(user)
+    resp != null && (user.password == resp.password) ? 
+    res.send({user: {id: resp._id, login: resp.login, group: resp.group}, resultCode: 0})
+    : res.status(200).send({resultCode: 1, message: 'incorrect email or password'})
 })
 
