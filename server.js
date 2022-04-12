@@ -31,9 +31,15 @@ client.connect(function (err, client) {
 //Requests
 
 app.get('/users', async function  (req, res) {
-    const data = db.collection('users')
-    const response = await data.find({}).toArray()
-    res.send(response)
+    db.collection('groups').updateOne({title: 'admin'}, {$push: {'groups.rules': {name: 'helleo'}}})
+    const dataa = db.collection('groups')
+    const response = await dataa.find({}).toArray()
+    // const id = response.data[0].groups.rules[1]
+    const hello = response.find( group => group.title = 'admin')
+
+    const id = hello.groups.rules[1]
+    const rules = await db.collection('rules').findOne(id)
+    res.send(rules)
 })
 
 app.post('/users', function (req, res){
@@ -64,4 +70,5 @@ app.post('/login', async function (req, res){
     res.send({user: {id: resp._id, login: resp.login, group: resp.group}, resultCode: 0})
     : res.status(200).send({resultCode: 1, message: 'incorrect email or password'})
 })
+
 
