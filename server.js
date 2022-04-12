@@ -1,74 +1,28 @@
-var express = require('express')
+const express = require('express')
+
 var cors = require('cors')
-var app = express()
-var bodyParser = require('body-parser')
-var MongoClient = require('mongodb').MongoClient
+const mongoose = require('mongoose')
+const authRouter = require('./authRouter')
 
+const PORT = 3012
+const url = 'mongodb://127.0.0.1:27017';
+const dbName = 'datacrm';
 
-app.use(cors())
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({extended: true}))
+const app = express()
 
+app.use(express.json())
+app.use('/auth', authRouter)
+app.use(cors({origin: '*'}))
 
-//MongoDB 
-
-const url = 'mongodb://localhost:27017';
-const client = new MongoClient(url);
-const dbName = 'crm';
-const db = client.db(dbName)
-
-client.connect(function (err, client) {
-    if (err) {
-        return console.log(err)
-    }   
-
-    app.listen('3012', function (req, res) {
-        console.log('API app started')
-    })
-})
-
-
-//Requests
-
-app.get('/users', async function  (req, res) {
-    db.collection('groups').updateOne({title: 'admin'}, {$push: {'groups.rules': {name: 'helleo'}}})
-    const dataa = db.collection('groups')
-    const response = await dataa.find({}).toArray()
-    // const id = response.data[0].groups.rules[1]
-    const hello = response.find( group => group.title = 'admin')
-
-    const id = hello.groups.rules[1]
-    const rules = await db.collection('rules').findOne(id)
-    res.send(rules)
-})
-
-app.post('/users', function (req, res){
-    var user = {
-        login: req.body.name,
-        group: req.body.group,
-        password: req.body.password
+const start = async() => {
+    try {
+        await mongoose.connect(`${url}/${dbName}`)
+        app.listen(PORT, () => console.log(`server started on port ${PORT}`))
     }
-    
-    db.collection('users').insertOne(user, function(err, result){
-        if (err){
-            console.log(err)
-            res.sendStatus(500)
-        }
-        res.send(user)
-    })
-    
-})
+    catch (e){
 
-app.post('/login', async function (req, res){
-    var user = {
-        login: req.body.login,
-        password: req.body.password
     }
-
-    const resp = await db.collection('users').findOne(user)
-    resp != null && (user.password == resp.password) ? 
-    res.send({user: {id: resp._id, login: resp.login, group: resp.group}, resultCode: 0})
-    : res.status(200).send({resultCode: 1, message: 'incorrect email or password'})
-})
+}
 
 
+start()
