@@ -10,7 +10,7 @@ const generateAccessToken = (id, roles) => {
     const payload = {
         id, roles
     }
-    return jwt.sign(payload, secret, {expiresIn: '24'})
+    return jwt.sign(payload, secret, {expiresIn: '24h'})
 }
 
 class authController {
@@ -53,10 +53,20 @@ class authController {
     }
     async getUsers(req, res) {
         try {
+            console.log(req.user)
             const users = await User.find()
             res.json(users)
+
         } catch (error) {
             res.json(error)
+        }
+    }
+    async checkAuth(req, res) {
+        try {
+            const user = await User.findOne({_id: req.user.id})
+            res.json(user)
+        } catch (error) {
+            res.status(400).json({message: 'Auth error'})
         }
     }
 }
