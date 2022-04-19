@@ -6,6 +6,9 @@ module.exports = function (req, res, next) {
         next()
     }
     try {
+        if (!req.headers.authorization){
+            return res.status(400).json({message: 'Не отправлен токен'})
+        }
         const token = req.headers.authorization.split(' ')[1]
         if (!token) {
             return res.status(403).json({ message: 'Пользователь не авторизован' })

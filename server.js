@@ -10,15 +10,12 @@ const dbName = 'datacrm';
 
 const app = express()
 
-const corsOptions = {
-    origin: '*',
-    allowedHeaders: 'Authorization',
-    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
-  }
 
+app.options('*', cors())
 app.use(express.json())
+app.use(cors())
 app.use('/auth', authRouter)
-app.use(cors(corsOptions))
+
 
 const start = async() => {
     try {
