@@ -7,15 +7,14 @@ module.exports = function (req, res, next) {
     }
     try {
         if (!req.headers.authorization){
-            return res.status(400).json({message: 'Не отправлен токен'})
+            return res.status(200).json({message: 'Не отправлен токен'})
         }
         const token = req.headers.authorization.split(' ')[1]
         if (!token) {
-            return res.status(403).json({ message: 'Пользователь не авторизован' })
+            return res.status(200).json({ message: 'Пользователь не авторизован' })
         }
         const decodedData = jwt.verify(token, secret)
         req.user = decodedData
-        console.log(req.user)
         next()
     } catch (error) {
         console.log(error)

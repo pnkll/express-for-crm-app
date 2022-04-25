@@ -1,9 +1,9 @@
-const User = require('./models/User')
-const Role = require('./models/Role')
+const User = require('../models/User')
+const Role = require('../models/Role')
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken')
 const { validationResult } = require('express-validator')
-const { secret } = require('./config')
+const { secret } = require('../config')
 
 
 const generateAccessToken = (id, roles) => {
@@ -23,33 +23,37 @@ class authController {
             // const { email, firstName, lastName, password } = req.body
 
 
-            const candidate = await User.findOne({ email: req.body.email })
+            const candidate = await User.findOne({ 'local.email': req.body.email })
             if (candidate) {
                 return res.status(400).json({ message: 'Данный e-mail уже зарегистрирован' })
             }
             const hashPassword = bcrypt.hashSync(req.body.password, 5);
             const userRole = await Role.findOne({ value: 'User' })
-            const user = new User({ email: req.body.email, password: hashPassword, roles: [userRole.value], firstName: req.body.firstName, lastName: req.body.lastName })
+            const user = new User({ 
+                'local.email': req.body.email, 'local.password': hashPassword,
+                'info.roles': [userRole.value], 'info.firstName': req.body.firstName, 'info.lastName': req.body.lastName
+            })
+            // console.log(user)
             await user.save()
             return res.json({ message: 'Пользователь успешно зарегистрирован', resultCode: 0 })
-            console.log(req.body)
+
         } catch (error) {
-            res.status(400).json({ message: 'Registration error' })
+            res.status(400).json({ message: 'Registration error', error })
         }
     }
     async login(req, res) {
         try {
             const { email, password } = req.body
-            const user = await User.findOne({ email })
+            const user = await User.findOne({ 'local.email': email })
             if (!user) {
-                return res.status(400).json({ message: `Пользователь ${email} не найден` })
+                return res.status(200).json({ message: `Пользователь ${email} не найден`, resultCode: 1 })
             }
-            const validPassword = bcrypt.compareSync(password, user.password)
+            const validPassword = bcrypt.compareSync(password, user.local.password)
             if (!validPassword) {
-                return res.status(400).json({ message: 'Введен неверный пароль' })
+                return res.status(200).json({ message: 'Введен неверный пароль', resultCode: 1 })
             }
-            const token = generateAccessToken(user._id, user.roles)
-            return res.json({ token })
+            const token = generateAccessToken(user._id, user.info.roles)
+            return res.json({ token, resultCode: 0 })
         } catch (error) {
             res.status(400).json({ message: 'Login error' })
         }
@@ -66,11 +70,10 @@ class authController {
     async logout(req, res) {
         try {
             const user = await User.findOne({})
-            console.log(user)
-            if (!user){
-                return res.status(400).json({message: 'Пользователь не найден'})
+            if (!user) {
+                return res.status(400).json({ message: 'Пользователь не найден' })
             }
-            res.status(200).json({message: `Пользователь ${user.email} успешно вышел`, resultCode: 0})
+            res.status(200).json({ message: `Пользователь ${user.email} успешно вышел`, resultCode: 0 })
             // if (user != null) {
             //     return res.status(200).json({ message: `Пользователь ${email} успешно вышел`, resultCode: 0 })
             // }
@@ -82,7 +85,7 @@ class authController {
             // }
             // else { res.status(400).json({ message: `Невозможно выйти` }) }
         } catch (error) {
-            res.status(400).json({ message: 'Logout error'})
+            res.status(400).json({ message: 'Logout error' })
         }
     }
 
@@ -92,6 +95,11 @@ class authController {
             // console.log(req.user)
             // const users = await User.find()
             // res.json(users)
+            // const userRole = new Role()
+            // const adminRole = new Role({value:'Admin'})
+            // await userRole.save()
+            // await adminRole.save()
+            res.json({ message: 'hello' })
 
 
         } catch (error) {
